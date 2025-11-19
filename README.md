@@ -4,6 +4,8 @@
 
 **DeepSeek** is a robust bash utility suite designed to take the fear out of project-wide refactoring. It is powered by **deepShift**, the global engine, and tamed by **codeShift**, the targeted architect.
 
+You load it once, and the suite is at your fingertips.
+
 ---
 
 ## The Suite
@@ -80,22 +82,20 @@ graph TD
 
 ## Installation
 
-Source the scripts in your shell profile (`.bashrc` or `.zshrc`) to make them available globally:
+Installation is streamlined via the **loader**. Source a single file in your shell profile (`.bashrc` or `.zshrc`) to initialize the entire suite:
 
 ```bash
 # In your .bashrc or profile
-source /path/to/DeepSeek/deepShift.sh
-source /path/to/DeepSeek/codeShift.sh
-
-# Optional: Add utility helpers
-source /path/to/DeepSeek/utils/deepShiftIsPathIgnored.sh
+source /path/to/DeepShift/loader
 ```
+
+Once loaded, both `deepShift` and `codeShift` (along with their utilities) are instantly available in your terminal.
 
 ## Safety First
 
 Both tools are built with safety rails:
 1. **Git Awareness:** Automatically respects `.gitignore` (unless you use `-n`).
-2. **Loop Prevention:** Prevents infinite renaming loops (e.g., `test` -> `test_old` -> `test_old_old`).
+2. **Loop Prevention:** Prevents infinite renaming loops.
 3. **Identity Check:** Skips operations if `old_string` equals `new_string`.
 4. **Structure Preservation:** Keeps file extensions intact during renaming.
 
