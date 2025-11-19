@@ -1,8 +1,8 @@
-# DeepSeek
+# DeepShift
 
 ### Refactor at the speed of thought.
 
-**DeepSeek** is a robust bash utility suite designed to take the fear out of project-wide refactoring. It is powered by **deepShift**, the global engine, and tamed by **codeShift**, the targeted architect.
+**DeepShift** is a robust bash utility suite designed to take the fear out of project-wide refactoring. It is powered by **deepShift**, the global engine, and tamed by **codeShift**, the targeted architect.
 
 You load it once, and the suite is at your fingertips.
 
@@ -103,4 +103,4 @@ Both tools are built with safety rails:
 
 ---
 
-*DeepSeek: Shift happens. Handle it intelligently.*
+*DeepShift: Shift happens. Handle it intelligently.*
