@@ -1,35 +1,36 @@
-# codeShift
+# DeepSeek
 
 ### Refactor at the speed of thought.
 
-**codeShift** is a robust bash utility suite designed to take the fear out of project-wide refactoring. It separates the **Targeted Structural Refactor** (files/folders) from the **Global String Refactor** (variables/content).
+**DeepSeek** is a robust bash utility suite designed to take the fear out of project-wide refactoring. It is powered by **deepShift**, the global engine, and tamed by **codeShift**, the targeted architect.
 
 ---
 
-## The Toolkit
+## The Suite
 
-### ❤️ codeShift: The Targeted Architect
-**Trigger: Filesystem Match**
+### 🚀 deepShift: The Showrunner
+**Trigger: Global String Existence**
 
-`codeShift` is smart. It scans your project tree. **If and only if** it finds files or directories matching your pattern, it initiates a refactor.
+`deepShift` is the engine. It is the brute force behind the operation. It recursively scans everything. It does not care about structure; it cares about **data consistency**.
 
-1.  **Scans** for `*pattern*` in filenames/dirnames.
-2.  **Renames** those specific items.
-3.  **Updates** documentation.
-4.  **Calls** `deepShift` to fix references.
-
-*Use this when moving or renaming specific components.*
-
-### 🛠️ deepShift: The Global Engine
-**Trigger: String Existence**
-
-`deepShift` is brute force. It recursively scans everything. It does not care about structure; it cares about **text**.
-
-1.  **Replaces** the string in **file content** (variables, imports, comments).
+1.  **Replaces** strings in **file content** (variables, imports, comments).
 2.  **Renames** any **files** containing the string.
 3.  **Renames** any **directories** containing the string.
+4.  **Safety:** Built-in infinite loop prevention and gitignore awareness.
 
 *Use this for renaming variables, fixing typos, or disambiguating names globally.*
+
+### 🦁 codeShift: The Tamer
+**Trigger: Filesystem Match**
+
+`codeShift` is the tamer. It is the "allatidomar" (all-around tamer) of the suite. It controls the raw power of `deepShift` by restricting operations to specific structures.
+
+1.  **Scans** your project tree for specific filename/dirname patterns.
+2.  **Renames** only those specific structural items.
+3.  **Updates** documentation automatically.
+4.  **Calls** `deepShift` internally to fix references *after* the structural change.
+
+*Use this when you need to move or rename specific components without affecting the whole world.*
 
 ---
 
@@ -37,10 +38,10 @@
 
 | Goal | Tool | Logic |
 |------|------|-------|
-| **Rename `User.ts` → `Account.ts`** | `codeShift` | You are targeting a specific file. |
-| **Rename `src/utils` → `src/helpers`** | `codeShift` | You are targeting a specific directory. |
-| **Rename `const userId` → `const accId`** | `deepShift` | **Crucial:** `codeShift` would fail here because no file is named `userId`. |
+| **Rename `const userId` → `const accId`** | `deepShift` | **Crucial:** This is a pure data/content operation. `codeShift` would fail here. |
 | **Fix typo `recieve` → `receive`** | `deepShift` | This is a text/string operation, not a file operation. |
+| **Rename `User.ts` → `Account.ts`** | `codeShift` | You are targeting a specific file structure. |
+| **Rename `src/utils` → `src/helpers`** | `codeShift` | You are targeting a specific directory structure. |
 
 ---
 
@@ -50,31 +51,31 @@
 graph TD
     User((User))
     
-    subgraph "Conditional Logic"
-        CS[codeShift]
-        Condition{Files Found?}
-    end
-    
-    subgraph "Unconditional Logic"
+    subgraph "The Engine"
         DS[deepShift]
     end
     
+    subgraph "The Tamer"
+        CS[codeShift]
+        Condition{Files Found?}
+    end
+
     subgraph Project
         FS[Filesystem Names]
         Txt[File Content]
     end
 
-    %% codeShift Path
+    %% deepShift Path (Direct)
+    User -->|Global String/Var| DS
+    DS -- "Find & Replace All" --> Txt
+    DS -- "Find & Rename All" --> FS
+
+    %% codeShift Path (Targeted)
     User -->|Rename Component| CS
     CS --> Condition
     Condition -- Yes --> FS
-    Condition -- Then --> DS
+    Condition -- Then calls --> DS
     Condition -- No --> Stop((Stop))
-
-    %% deepShift Path
-    User -->|Rename String/Var| DS
-    DS -- "Find & Replace All" --> Txt
-    DS -- "Find & Rename All" --> FS
 ```
 
 ## Installation
@@ -83,18 +84,18 @@ Source the scripts in your shell profile (`.bashrc` or `.zshrc`) to make them av
 
 ```bash
 # In your .bashrc or profile
-source /path/to/codeShift/deepShift.sh
-source /path/to/codeShift/codeShift.sh
+source /path/to/DeepSeek/deepShift.sh
+source /path/to/DeepSeek/codeShift.sh
 
 # Optional: Add utility helpers
-source /path/to/codeShift/utils/deepShiftIsPathIgnored.sh
+source /path/to/DeepSeek/utils/deepShiftIsPathIgnored.sh
 ```
 
 ## Safety First
 
 Both tools are built with safety rails:
 1. **Git Awareness:** Automatically respects `.gitignore` (unless you use `-n`).
-2. **Loop Prevention:** Prevents infinite renaming loops.
+2. **Loop Prevention:** Prevents infinite renaming loops (e.g., `test` -> `test_old` -> `test_old_old`).
 3. **Identity Check:** Skips operations if `old_string` equals `new_string`.
 4. **Structure Preservation:** Keeps file extensions intact during renaming.
 
@@ -102,4 +103,4 @@ Both tools are built with safety rails:
 
 ---
 
-*codeShift: Shift happens. Handle it intelligently.*
+*DeepSeek: Shift happens. Handle it intelligently.*
