@@ -6,6 +6,11 @@
 
 You load it once, and the suite is at your fingertips.
 
+## 📚 Navigation
+*   **[🏠 Main README](./README.md)** (You are here)
+*   **[🚀 deepShift Documentation](./deepShift.sh.README.md)** - The Global Engine
+*   **[🦁 codeShift Documentation](./codeShift.sh.README.md)** - The Structural Tamer
+
 ---
 
 ## The Suite
@@ -15,6 +20,16 @@ You load it once, and the suite is at your fingertips.
 
 `deepShift` is the engine. It is the brute force behind the operation. It recursively scans everything. It does not care about structure; it cares about **data consistency**.
 
+**Quick Usage:**
+```bash
+# Renames 'userId' to 'accId' in:
+# 1. File contents (variables, imports)
+# 2. Filenames (userId.ts -> accId.ts)
+# 3. Directories (src/userId/ -> src/accId/)
+deepShift "userId" "accId"
+```
+
+**Capabilities:**
 1.  **Replaces** strings in **file content** (variables, imports, comments).
 2.  **Renames** any **files** containing the string.
 3.  **Renames** any **directories** containing the string.
@@ -23,17 +38,31 @@ You load it once, and the suite is at your fingertips.
 
 *Use this for renaming variables, fixing typos, or disambiguating names globally (files AND folders).*
 
+👉 **[Full deepShift Documentation & Advanced Usage](./deepShift.sh.README.md)**
+
+---
+
 ### 🦁 codeShift: The Tamer
 **Trigger: Filesystem Match**
 
 `codeShift` is the tamer. It is the "allatidomar" (all-around tamer) of the suite. It controls the raw power of `deepShift` by restricting operations to specific structures.
 
+**Quick Usage:**
+```bash
+# Finds files/dirs matching "Auth", renames them to "Security",
+# then updates internal references automatically.
+codeShift "Auth" "Security"
+```
+
+**Capabilities:**
 1.  **Scans** your project tree for specific filename/dirname patterns.
 2.  **Renames** only those specific structural items (Structural Shift).
 3.  **Updates** documentation automatically.
 4.  **Triggers** `deepShift` internally to fix global references *after* the structural change is confirmed.
 
 *Use this when you need to move or rename specific components without affecting the whole world.*
+
+👉 **[Full codeShift Documentation & Advanced Usage](./codeShift.sh.README.md)**
 
 ---
 
