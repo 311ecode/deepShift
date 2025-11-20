@@ -58,9 +58,16 @@ graph TD
         DS["🚀 deepShift<br/>(Global Replace)"]
     end
 
-    subgraph "Impact"
-        FS["Filesystem<br/>(Renames)"]
-        Content["Content<br/>(References)"]
+    subgraph "Impact Layer"
+        subgraph "Filesystem Ops"
+            FileRen["File Renames<br/>(User.ts → Acc.ts)"]
+            DirRen["Dir Renames<br/>(utils/ → helpers/)"]
+            PathMov["Path Segment Moves<br/>(deep/nested → flat/path)"]
+        end
+        
+        subgraph "Content Ops"
+            RefUp["Reference Updates<br/>(Imports/Variables)"]
+        end
     end
 
     %% User Flows
@@ -69,15 +76,18 @@ graph TD
     User -->|Dirs Only| DirS
 
     %% deepShift Logic
-    DS --> FS
-    DS --> Content
+    DS --> FileRen
+    DS --> DirRen
+    DS --> PathMov
+    DS --> RefUp
 
     %% codeShift Logic
-    CS -- "1. Rename Trigger" --> FS
+    CS -- "1. Pattern Match" --> FileRen
+    CS -- "1. Pattern Match" --> DirRen
     CS -- "2. Update References" --> DS
     
     %% dirShift Logic
-    DirS -- "1. Rename Trigger" --> FS
+    DirS -- "1. Pattern Match" --> DirRen
     DirS -- "2. Update References" --> DS
-    DirS -. "Explicit Move" .-> DS
+    DirS -. "Explicit Move" .-> PathMov
 ```
