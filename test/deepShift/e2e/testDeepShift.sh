@@ -24,6 +24,7 @@ testDeepShift() {
     "testDeepShiftAbsoluteFilePathArgument"
     "testDeepShiftDirectoryPathArgument"
     "testDeepShiftScopeFlags"
+    "testDeepShiftPathSegmentRenaming"
   )
 
   local ignored_testDeepShifts=()  # 🚫 No testDeepShifts ignored

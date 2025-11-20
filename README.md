@@ -16,27 +16,31 @@ You load it once, and the suite is at your fingertips.
 ## The Suite
 
 ### 🚀 deepShift: The Showrunner
-**Trigger: Global String Existence**
+**Trigger: Global String Existence OR Path Segments**
 
-`deepShift` is the engine. It is the brute force behind the operation. It recursively scans everything. It does not care about structure; it cares about **data consistency**.
+`deepShift` is the engine. It is the brute force behind the operation. It recursively scans everything. It cares about **data consistency** and **path integrity**.
 
 **Quick Usage:**
 ```bash
-# Renames 'userId' to 'accId' in:
-# 1. File contents (variables, imports)
-# 2. Filenames (userId.ts -> accId.ts)
-# 3. Directories (src/userId/ -> src/accId/)
+# Renames 'userId' to 'accId' everywhere (files & content)
 deepShift "userId" "accId"
+
+# Moves a directory and updates all imports automatically
+deepShift "src/auth" "src/security"
+
+# Renames a specific file you dragged into the terminal
+deepShift "src/components/OldButton.tsx" "NewButton"
 ```
 
 **Capabilities:**
 1.  **Replaces** strings in **file content** (variables, imports, comments).
 2.  **Renames** any **files** containing the string.
-3.  **Renames** any **directories** containing the string.
-    *   *Magic:* This effectively rewrites path segments. Renaming a directory from `user` to `member` updates the path for every file inside it (e.g., `src/user/api/` becomes `src/member/api/`).
-4.  **Safety:** Built-in infinite loop prevention and gitignore awareness.
+3.  **Moves/Renames Paths** (Path Segment Mode):
+    *   If you provide a path like `deep/deeper`, it handles the directory move AND updates references.
+4.  **Smart Drag & Drop:** Detects if you provided a file path and "does the right thing" (renames the entity instead of the path).
+5.  **Safety:** Built-in infinite loop prevention and gitignore awareness.
 
-*Use this for renaming variables, fixing typos, or disambiguating names globally (files AND folders).*
+*Use this for renaming variables, fixing typos, moving directories, or disambiguating names globally.*
 
 👉 **[Full deepShift Documentation & Advanced Usage](./deepShift.sh.README.md)**
 
@@ -70,11 +74,11 @@ codeShift "Auth" "Security"
 
 | Goal | Tool | Logic |
 |------|------|-------|
-| **Rename `const userId` → `const accId`** | `deepShift` | **Crucial:** This is a pure data/content operation. `codeShift` would fail here. |
-| **Fix typo `recieve` → `receive`** | `deepShift` | This is a text/string operation, not a file operation. |
-| **Rename `src/users/` → `src/members/`** | `deepShift` | **Directory Renaming:** You want to rename a directory node. This updates the path for all children. |
-| **Rename `User.ts` → `Account.ts`** | `codeShift` | You are targeting a specific file structure. |
-| **Rename `src/utils` → `src/helpers`** | `codeShift` | You are targeting a specific directory structure. |
+| **Rename `const userId` → `const accId`** | `deepShift` | **Crucial:** This is a pure data/content operation. |
+| **Rename `src/users/` → `src/members/`** | `deepShift` | **Path Segment:** You want to move a directory. `deepShift` handles path segments natively. |
+| **Rename `src/utils/Log.ts` → `Logger`** | `deepShift` | **Smart Rename:** Drag the file in, give it a new name. It stays in the same folder. |
+| **Rename `User.ts` → `Account.ts`** | `codeShift` | You are searching for a *pattern* ("User") in filenames to rename them to "Account". |
+| **Fix typo `recieve` → `receive`** | `deepShift` | This is a text/string operation. |
 
 ---
 
@@ -86,6 +90,9 @@ graph TD
     
     subgraph "The Engine"
         DS[deepShift]
+        Logic{Input Logic}
+        StringMode[String Mode]
+        PathMode[Path Segment Mode]
     end
     
     subgraph "The Tamer"
@@ -102,10 +109,17 @@ graph TD
     end
 
     %% deepShift Path (Direct)
-    User -->|Global String/Var| DS
-    DS -- "Replace Substrings" --> Txt
-    DS -- "Rename Matching Files" --> Files
-    DS -- "Rename Dir Segments" --> Dirs
+    User -->|Global String/Path| DS
+    DS --> Logic
+    
+    Logic -- "No Slashes" --> StringMode
+    Logic -- "Has Slashes" --> PathMode
+    
+    StringMode -- "Replace Substrings" --> Txt
+    StringMode -- "Rename Matching Files" --> Files
+    
+    PathMode -- "Move Directory/File" --> Dirs
+    PathMode -- "Update Imports" --> Txt
 
     %% codeShift Path (Targeted)
     User -->|Rename Component| CS
