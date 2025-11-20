@@ -51,11 +51,9 @@ dirShift() {
   fi
 
   # 2. Strategy Selection
-  # If the user provided an Explicit Path (e.g., "src/auth") that exists, 
-  # we treat it as a specific Move/Rename rather than a pattern search.
+  # If explicit path exists, treat as specific move
   if [[ -d "$target_dir/$old_string" ]] || [[ -d "$old_string" ]]; then
       echo "📂 Mode: Explicit Directory Move"
-      # Let deepShift handle the specific path segment move logic
       deepShift "$old_string" "$new_string" "${replace_flags[@]}"
       return $?
   fi
@@ -67,9 +65,7 @@ dirShift() {
     echo "📂 Working in: $(pwd)"
     echo "🔍 Scanning for DIRECTORIES matching pattern: *${old_string}*"
     
-    # Construct Find Commands safely
     local find_opts=( )
-    
     if [[ "$skip_git" != "true" ]]; then
       find_opts+=( -not -path "./.git/*" -not -path "./node_modules/*" )
       if [[ -f .gitignore ]]; then
@@ -81,7 +77,6 @@ dirShift() {
       fi
     fi
 
-    # Find matching directories
     local matching_dirs=()
     while IFS= read -r -d '' dir; do
       [[ "$dir" != "." ]] && matching_dirs+=("$dir")
@@ -98,7 +93,7 @@ dirShift() {
     echo "   Found $dirs_found directories."
     
     # Sort directories by depth (deepest first)
-    # FIX: Use a temp variable 'p' for gsub calculation to preserve '$0' (the path)
+    # FIX: Use temp variable 'p' in awk to preserve $0 path
     local sorted_dirs=()
     while IFS= read -r dir; do
       sorted_dirs+=("$dir")
@@ -134,10 +129,12 @@ dirShift() {
     done
     
     # 5. Global Content Update
-    # We update content to match the new directory names (imports, paths, etc.)
+    # Now that directories are moved, we MUST update references (imports, etc.)
     if [[ $dirs_processed -gt 0 ]]; then
-        echo "🔄 Updating content references (content only)..."
-        deepShift "$old_string" "$new_string" "${replace_flags[@]}" -c 2>/dev/null && echo "✅ References updated"
+        echo "🔄 Updating content references..."
+        # Call deepShift in content-only mode (-c) to update strings matching the rename
+        deepShift "$old_string" "$new_string" "${replace_flags[@]}" -c
+        echo "✅ References updated"
         echo ""
     fi
     
