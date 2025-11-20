@@ -2,10 +2,11 @@
 A specialized Bash utility for **architectural refactoring**. It focuses strictly on finding, renaming, or moving directories and updating the project references to match.
 
 ## 📚 Navigation
-*   **[🏠 EXAMPLES](./EXAMPLES.md)** (You are here)
+*   **[🏠 EXAMPLES](./EXAMPLES.md)**  
 *   **[🏠 Back to Main README](./README.md)**
 *   **[🦁 See codeShift (The Tamer)](./codeShift.sh.README.md)**
 *   **[🚀 See deepShift (The Engine)](./deepShift.sh.README.md)**
+*   **[🏠 README](./README.md)**
 
 ---
 

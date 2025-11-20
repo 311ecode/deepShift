@@ -2,10 +2,11 @@
 A comprehensive Bash utility for project-wide string replacement, file renaming, and path segment moving. It features intelligent input detection, gitignore handling, and infinite loop prevention.
 
 ## 📚 Navigation
-*   **[🏠 EXAMPLES](./EXAMPLES.md)** (You are here)
+*   **[🏠 EXAMPLES](./EXAMPLES.md)**  
 *   **[🏠 Back to Main README](./README.md)**
 *   **[🦁 See codeShift (The Tamer)](./codeShift.sh.README.md)**
 *   **[🚀 deepShift Documentation (Current)](./deepShift.sh.README.md)**
+*   **[🏠 README](./README.md)**
 
 ---
 
