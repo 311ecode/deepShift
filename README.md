@@ -55,8 +55,8 @@ graph TD
         DirS[dirShift]
     end
 
-    subgraph "Logic Layers"
-        Str[String Replace]
+    subgraph "Capabilities"
+        Str[String/Content Replace]
         FileRen[File Rename]
         DirRen[Dir Rename]
     end
@@ -66,19 +66,19 @@ graph TD
     User -->|Files & Dirs| CS
     User -->|Dirs Only| DirS
 
-    %% deepShift Direct
+    %% deepShift (The Engine)
     DS --> Str
     DS --> DirRen
     DS --> FileRen
 
-    %% codeShift Flow
+    %% codeShift (The Tamer)
     CS --> FileRen
     CS --> DirRen
-    CS -.->|Trigger Content Update| DS
+    CS -.->|Updates References| Str
     
-    %% dirShift Flow
-    DirS -- "Explicit Path?" --> DS
+    %% dirShift (The Architect)
     DirS -- "Recursive Pattern" --> DirRen
+    DirS -- "Explicit Path" --> DS
     DirS --x FileRen
-    DirRen -.->|Trigger Content Update| DS
+    DirS -.->|Updates References| Str
 ```
