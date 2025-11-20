@@ -13,10 +13,11 @@ To run the DeepShift suite, ensure your environment meets the following criteria
     *   *Note for macOS users*: This suite uses GNU `sed` syntax (standard `sed -i`). If you are on macOS (BSD sed), ensure you have a compatible version or use `gnu-sed`.
 
 ## 📚 Navigation
-*   **[🏠 EXAMPLES](./EXAMPLES.md)** (You are here)
+*   **[🏠 EXAMPLES](./EXAMPLES.md)**  
 *   **[🚀 deepShift](./deepShift.sh.README.md)** - The Global Engine
 *   **[🦁 codeShift](./codeShift.sh.README.md)** - The Structural Tamer (Files & Dirs)
 *   **[📂 dirShift](./dirShift.sh.README.md)** - The Architect (Dirs Only)
+*   **[🏠 README](./README.md)**
 
 ---
 
