@@ -91,11 +91,32 @@ graph TD
     DS --> RefUp
 
     %% codeShift Logic
-    CS -- "1. Pattern Match" --> FileRen
-    CS -- "1. Pattern Match" --> DirRen
     CS -- "2. Update References" --> DS
     
     %% dirShift Logic
-    DirS -- "1. Pattern Match" --> DirRen
     DirS -- "2. Update References" --> DS
-    DirS -. "Explicit Move" .-> PathMov
+
+
+## Installation
+
+Installation is streamlined via the **loader**. Source a single file in your shell profile (`.bashrc` or `.zshrc`) to initialize the entire suite:
+
+```bash
+# In your .bashrc or profile
+source /path/to/DeepSeek/loader
+```
+
+## Safety First
+
+Both tools are built with safety rails:
+1. **Git Awareness:** Automatically respects `.gitignore` (unless you use `-n`).
+2. **Loop Prevention:** Prevents infinite renaming loops.
+3. **Identity Check:** Skips operations if `old_string` equals `new_string`.
+4. **Structure Preservation:** Keeps file extensions intact during renaming.
+
+> ⚠️ **Always commit your changes** before running a shift operation. Refactoring is a destructive operation.
+
+---
+
+<!-- Shift happens. Handle it intelligently. -->
+
