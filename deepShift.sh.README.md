@@ -1,6 +1,13 @@
 # deepShift
 A comprehensive Bash utility for project-wide string replacement and file/directory renaming with intelligent gitignore handling and infinite loop prevention.
 
+## 📚 Navigation
+*   **[🏠 Back to Main README](./README.md)**
+*   **[🦁 See codeShift (The Tamer)](./codeShift.sh.README.md)**
+*   **[🚀 deepShift Documentation (Current)](./deepShift.sh.README.md)**
+
+---
+
 ## Overview
 `deepShift` is a **three-level replacement engine** that operates simultaneously on:
 1. **Content Level**: String replacement in file contents

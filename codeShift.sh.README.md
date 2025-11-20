@@ -1,6 +1,13 @@
 # codeShift
 A specialized Bash utility for **recursive structural refactoring**. It handles batch file and directory renaming with intelligent pattern matching and automatic documentation updates.
 
+## 📚 Navigation
+*   **[🏠 Back to Main README](./README.md)**
+*   **[🦁 codeShift Documentation (Current)](./codeShift.sh.README.md)**
+*   **[🚀 See deepShift (The Engine)](./deepShift.sh.README.md)**
+
+---
+
 ## Purpose
 `codeShift` is designed for **Massive Recursive Discovery**.
 It scans your project tree to find **files and directories** matching a pattern, then orchestrates comprehensive updates:
