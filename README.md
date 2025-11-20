@@ -18,9 +18,10 @@ You load it once, and the suite is at your fingertips.
 1.  **Replaces** strings in **file content** (variables, imports, comments).
 2.  **Renames** any **files** containing the string.
 3.  **Renames** any **directories** containing the string.
+    *   *Magic:* This effectively rewrites path segments. Renaming a directory from `user` to `member` updates the path for every file inside it (e.g., `src/user/api/` becomes `src/member/api/`).
 4.  **Safety:** Built-in infinite loop prevention and gitignore awareness.
 
-*Use this for renaming variables, fixing typos, or disambiguating names globally.*
+*Use this for renaming variables, fixing typos, or disambiguating names globally (files AND folders).*
 
 ### 🦁 codeShift: The Tamer
 **Trigger: Filesystem Match**
@@ -42,6 +43,7 @@ You load it once, and the suite is at your fingertips.
 |------|------|-------|
 | **Rename `const userId` → `const accId`** | `deepShift` | **Crucial:** This is a pure data/content operation. `codeShift` would fail here. |
 | **Fix typo `recieve` → `receive`** | `deepShift` | This is a text/string operation, not a file operation. |
+| **Rename `src/users/` → `src/members/`** | `deepShift` | **Directory Renaming:** You want to rename a directory node. This updates the path for all children. |
 | **Rename `User.ts` → `Account.ts`** | `codeShift` | You are targeting a specific file structure. |
 | **Rename `src/utils` → `src/helpers`** | `codeShift` | You are targeting a specific directory structure. |
 
@@ -63,19 +65,20 @@ graph TD
     end
 
     subgraph Project
-        FS[Filesystem Names]
         Txt[File Content]
+        Files[Filenames]
+        Dirs[Directory Names]
     end
 
     %% deepShift Path (Direct)
     User -->|Global String/Var| DS
-    DS -- "Find & Replace All" --> Txt
-    DS -- "Find & Rename All" --> FS
+    DS -- "Replace Substrings" --> Txt
+    DS -- "Rename Matching Files" --> Files
+    DS -- "Rename Dir Segments" --> Dirs
 
     %% codeShift Path (Targeted)
     User -->|Rename Component| CS
     CS --> Condition
-    Condition -- Yes --> FS
     Condition -- Then calls --> DS
     Condition -- No --> Stop((Stop))
 ```
