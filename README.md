@@ -29,9 +29,9 @@ You load it once, and the suite is at your fingertips.
 `codeShift` is the tamer. It is the "allatidomar" (all-around tamer) of the suite. It controls the raw power of `deepShift` by restricting operations to specific structures.
 
 1.  **Scans** your project tree for specific filename/dirname patterns.
-2.  **Renames** only those specific structural items.
+2.  **Renames** only those specific structural items (Structural Shift).
 3.  **Updates** documentation automatically.
-4.  **Calls** `deepShift` internally to fix references *after* the structural change.
+4.  **Triggers** `deepShift` internally to fix global references *after* the structural change is confirmed.
 
 *Use this when you need to move or rename specific components without affecting the whole world.*
 
@@ -61,7 +61,9 @@ graph TD
     
     subgraph "The Tamer"
         CS[codeShift]
-        Condition{Files Found?}
+        Scan[Scan Filesystem]
+        Rename[Rename Files/Dirs]
+        Check{Changes Made?}
     end
 
     subgraph Project
@@ -78,9 +80,15 @@ graph TD
 
     %% codeShift Path (Targeted)
     User -->|Rename Component| CS
-    CS --> Condition
-    Condition -- Then calls --> DS
-    Condition -- No --> Stop((Stop))
+    CS --> Scan
+    Scan -- "Pattern Match" --> Rename
+    Rename -- "Modify" --> Files
+    Rename -- "Modify" --> Dirs
+    Rename --> Check
+    
+    %% The Handoff
+    Check -- Yes: Fix References --> DS
+    Check -- No --> Stop((Stop))
 ```
 
 ## Installation
