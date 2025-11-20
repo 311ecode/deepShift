@@ -14,4 +14,5 @@ export LOADER_DEEPSHIFT_81888EB9_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/d
 # Source all scripts relative to our exported path
 source "$LOADER_DEEPSHIFT_81888EB9_DIR/codeShift.sh"
 source "$LOADER_DEEPSHIFT_81888EB9_DIR/deepShift.sh"
+source "$LOADER_DEEPSHIFT_81888EB9_DIR/dirShift.sh"
 source "$LOADER_DEEPSHIFT_81888EB9_DIR/utils/deepShiftIsPathIgnored.sh"

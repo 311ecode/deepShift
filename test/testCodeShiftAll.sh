@@ -6,6 +6,7 @@ testCodeShiftAll() {
   local testDeepShift_functions=(
     "testDeepShift"
     "testCodeShift" 
+    "testDirShift"
   )
 
   local ignored_testDeepShifts=()  # 🚫 No testDeepShifts ignored
