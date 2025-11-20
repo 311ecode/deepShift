@@ -49,36 +49,35 @@ The architect. Scans strictly for **directories** matching a pattern. It ignores
 graph TD
     User((User))
     
-    subgraph "The Tools"
-        DS[deepShift]
-        CS[codeShift]
-        DirS[dirShift]
+    subgraph "Scoped Triggers"
+        CS["🦁 codeShift<br/>(If File/Dir Exists)"]
+        DirS["📂 dirShift<br/>(If Dir Exists)"]
     end
 
-    subgraph "Capabilities"
-        Str[String/Content Replace]
-        FileRen[File Rename]
-        DirRen[Dir Rename]
+    subgraph "The Engine"
+        DS["🚀 deepShift<br/>(Global Replace)"]
     end
 
-    %% Flows
-    User -->|Content/Path| DS
+    subgraph "Impact"
+        FS["Filesystem<br/>(Renames)"]
+        Content["Content<br/>(References)"]
+    end
+
+    %% User Flows
+    User -->|Global String/Path| DS
     User -->|Files & Dirs| CS
     User -->|Dirs Only| DirS
 
-    %% deepShift (The Engine)
-    DS --> Str
-    DS --> DirRen
-    DS --> FileRen
+    %% deepShift Logic
+    DS --> FS
+    DS --> Content
 
-    %% codeShift (The Tamer)
-    CS --> FileRen
-    CS --> DirRen
-    CS -.->|Updates References| Str
+    %% codeShift Logic
+    CS -- "1. Rename Trigger" --> FS
+    CS -- "2. Update References" --> DS
     
-    %% dirShift (The Architect)
-    DirS -- "Recursive Pattern" --> DirRen
-    DirS -- "Explicit Path" --> DS
-    DirS --x FileRen
-    DirS -.->|Updates References| Str
+    %% dirShift Logic
+    DirS -- "1. Rename Trigger" --> FS
+    DirS -- "2. Update References" --> DS
+    DirS -. "Explicit Move" .-> DS
 ```
