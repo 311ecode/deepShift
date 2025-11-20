@@ -26,7 +26,7 @@ The tamer. Scans for filenames matching a pattern and renames them, then updates
 
 ### 📂 dirShift
 **Trigger: Directory Existence**
-The architect. Scans strictly for directories matching a pattern or handles architectural moves. It ignores files matching the name.
+The architect. Scans strictly for **directories** matching a pattern. It ignores files matching the name. After renaming the structure, it triggers `deepShift` to update imports and references.
 *Use for: Renaming modules, folders, or architectural layers (e.g., `src/utils` -> `src/helpers`).*
 
 ---
@@ -36,7 +36,7 @@ The architect. Scans strictly for directories matching a pattern or handles arch
 | Goal | Tool | Logic |
 |------|------|-------|
 | **Rename `const userId` → `const accId`** | `deepShift` | Content operation. |
-| **Rename `src/auth/` → `src/security/`** | `dirShift` | Explicit directory move. |
+| **Rename `src/auth/` → `src/security/`** | `dirShift` | Explicit directory move (Calls deepShift). |
 | **Rename ALL `utils` folders → `helpers`** | `dirShift` | Recursive directory pattern. |
 | **Rename `User.ts` → `Account.ts`** | `codeShift` | File pattern match. |
 | **Drag & Drop File Rename** | `deepShift` | Smart entity rename. |
@@ -55,24 +55,30 @@ graph TD
         DirS[dirShift]
     end
 
-    subgraph "Logic"
+    subgraph "Logic Layers"
         Str[String Replace]
         FileRen[File Rename]
         DirRen[Dir Rename]
     end
 
+    %% Flows
     User -->|Content/Path| DS
     User -->|Files & Dirs| CS
     User -->|Dirs Only| DirS
 
+    %% deepShift Direct
     DS --> Str
     DS --> DirRen
-    
+    DS --> FileRen
+
+    %% codeShift Flow
     CS --> FileRen
     CS --> DirRen
-    CS -.->|Update Refs| DS
+    CS -.->|Trigger Content Update| DS
     
-    DirS --> DirRen
+    %% dirShift Flow
+    DirS -- "Explicit Path?" --> DS
+    DirS -- "Recursive Pattern" --> DirRen
     DirS --x FileRen
-    DirS -.->|Update Refs| DS
+    DirRen -.->|Trigger Content Update| DS
 ```

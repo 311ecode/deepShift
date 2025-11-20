@@ -10,9 +10,10 @@ A specialized Bash utility for **architectural refactoring**. It focuses strictl
 
 ## Purpose
 `dirShift` is the **Architect**.
-While `codeShift` looks for anything matching a pattern, and `deepShift` looks for strings, `dirShift` asks: **"Does this Directory exist?"**
+It is designed to safely restructure folders without accidentally renaming files that happen to share the same name. It operates in two modes:
 
-It is designed to safely restructure folders without accidentally renaming files that happen to share the same name.
+1.  **Explicit Mode**: Moves a specific path (wrapper for `deepShift`).
+2.  **Pattern Mode**: Finds all directories matching a name, renames them, and updates content.
 
 ## Usage
 
@@ -39,14 +40,16 @@ dirShift "utils" "helpers"
 ```
 *Note: A file named `utils.ts` would be IGNORED. This is the key difference from `codeShift`.*
 
-## The Logic
+## The Logic Flow
 
 1.  **Input Check**: Is `$1` an explicit directory path?
-    *   **Yes**: Trigger **Explicit Move Mode**. Call `deepShift` to move the path segment.
+    *   **Yes**: Pass control to `deepShift` (Path Segment Mode). Done.
 2.  **Pattern Scan**: Scan for directories matching the pattern.
-    *   **Found**: Rename them (deepest first).
-    *   **Not Found**: Stop. (Safety check).
-3.  **Reference Update**: Trigger `deepShift` (Content Mode) to update all strings in files to match the new directory structure.
+    *   **Found**: Rename them (deepest first) to prevent path invalidation.
+    *   **Not Found**: Stop.
+3.  **Reference Update**:
+    *   After successful directory renaming, `dirShift` calls `deepShift` in **Content Only Mode (`-c`)**.
+    *   This ensures that all imports, config strings, and documentation referencing the old directory names are updated to the new names.
 
 ## Comparison
 

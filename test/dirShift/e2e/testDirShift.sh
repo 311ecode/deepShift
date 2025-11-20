@@ -7,16 +7,16 @@
 testDirShift() {
   export LC_NUMERIC=C
 
-  testDirShiftFunctions=(
+  local testDirShiftFunctions=(
     "testDirShiftExplicitMove"
     "testDirShiftRecursivePattern"
     "testDirShiftIgnoresFiles"
     "testDirShiftContentUpdate"
   )
 
-  ignoredArr=()
+  local ignored_testDirShifts=()  # 🚫 No testDirShifts ignored
 
-  bashTestRunner testDirShiftFunctions ignoredArr
+  bashTestRunner testDirShiftFunctions ignored_testDirShifts
   return $?
 }
 
@@ -89,18 +89,40 @@ testDirShiftContentUpdate() {
     cd "$test_dir" || return 1
     
     mkdir -p src/modules
+    # File referencing the directory
     echo "import m from './modules'" > src/index.ts
+    # Variable referencing the name (should also update as per codeShift/deepShift standard)
+    echo "const modules = true" > src/config.ts
     
     dirShift "modules" "packages" >/dev/null 2>&1
     
+    # Check 1: Directory renamed?
+    if [[ ! -d "src/packages" ]]; then
+         echo "❌ ERROR: Directory not renamed"
+         rm -rf "$test_dir"; return 1
+    fi
+
+    # Check 2: Import updated?
     if grep -q "./packages" src/index.ts; then
-        echo "✅ SUCCESS: Content references updated"
-        rm -rf "$test_dir"; return 0
+        echo "   ✅ Import paths updated"
     else
-        echo "❌ ERROR: Content not updated"
+        echo "   ❌ ERROR: Import paths NOT updated"
         cat src/index.ts
         rm -rf "$test_dir"; return 1
     fi
+
+    # Check 3: Variable updated?
+    if grep -q "const packages = true" src/config.ts; then
+        echo "   ✅ Variables updated"
+    else
+        echo "   ❌ ERROR: Content variables NOT updated"
+        cat src/config.ts
+        rm -rf "$test_dir"; return 1
+    fi
+
+    echo "✅ SUCCESS: Full content update verified"
+    rm -rf "$test_dir"
+    return 0
 }
 
 [[ "${BASH_SOURCE[0]}" == "${0}" ]] && testDirShift
