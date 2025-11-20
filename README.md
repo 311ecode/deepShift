@@ -5,7 +5,7 @@
 **DeepShift** is a robust bash utility suite designed to take the fear out of project-wide refactoring.
 
 ## 📚 Navigation
-*   **[🏠 Main README](./README.md)** (You are here)
+*   **[🏠 EXAMPLES](./EXAMPLES.md)** (You are here)
 *   **[🚀 deepShift](./deepShift.sh.README.md)** - The Global Engine
 *   **[🦁 codeShift](./codeShift.sh.README.md)** - The Structural Tamer (Files & Dirs)
 *   **[📂 dirShift](./dirShift.sh.README.md)** - The Architect (Dirs Only)
