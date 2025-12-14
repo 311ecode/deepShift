@@ -2,12 +2,13 @@
 
 ### Refactor at the speed of thought.
 
-**DeepShift** is a robust bash utility suite designed to take the fear out of project-wide refactoring.
+**DeepShift** is a robust utility suite designed to take the fear out of project-wide refactoring.
 
 ## 📋 Requirements
 To run the DeepShift suite, ensure your environment meets the following criteria:
 
-*   **Bash 4.0+**: Required for associative arrays (`declare -A`) used in loop prevention.
+*   **Node.js 14+**: Required for `deepShift` which uses Node.js for cross-platform compatibility.
+*   **Bash 4.0+**: Required for associative arrays (`declare -A`) used in loop prevention in other tools.
 *   **Git**: Required for `.gitignore` parsing and repository safety checks.
 *   **Standard Utilities**: `find`, `grep`, `awk`, `sed`.
     *   *Note for macOS users*: This suite uses GNU `sed` syntax (standard `sed -i`). If you are on macOS (BSD sed), ensure you have a compatible version or use `gnu-sed`.
@@ -119,4 +120,3 @@ Both tools are built with safety rails:
 ---
 
 <!-- Shift happens. Handle it intelligently. -->
-
