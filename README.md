@@ -14,9 +14,9 @@ To run the DeepShift suite, ensure your environment meets the following criteria
 
 ## 📚 Navigation
 *   **[🏠 EXAMPLES](./EXAMPLES.md)**  
-*   **[🚀 deepShift](./deepShift.sh.README.md)** - The Global Engine
-*   **[🦁 codeShift](./codeShift.sh.README.md)** - The Structural Tamer (Files & Dirs)
-*   **[📂 dirShift](./dirShift.sh.README.md)** - The Architect (Dirs Only)
+*   **[🚀 deepShift](./src/deepShift/deepShift.sh.README.md)** - The Global Engine
+*   **[🦁 codeShift](./src/codeShift/codeShift.sh.README.md)** - The Structural Tamer (Files & Dirs)
+*   **[📂 dirShift](./src/dirShift/dirShift.sh.README.md)** - The Architect (Dirs Only)
 *   **[🏠 README](./README.md)**
 
 ---
