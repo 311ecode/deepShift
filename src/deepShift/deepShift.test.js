@@ -2,8 +2,7 @@
  * deepShift.test.js
  * Test suite for deepShift.js using Node.js built-in test runner.
  *
- * Run with:
- * node --test deepShift.test.js
+ * Run with: node --test deepShift.test.js
  */
 const { describe, it } = require('node:test');
 const assert = require('node:assert');
