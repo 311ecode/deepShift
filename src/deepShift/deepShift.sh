@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 deepShift() {
-    command -v markdown-show-help-registration &>/dev/null && eval "$(markdown-show-help-registration --minimum-parameters 3)"
+    command -v markdown-show-help-registration &>/dev/null && eval "$(markdown-show-help-registration --minimum-parameters 2)"
     local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     local deepshift_js="${script_dir}/deepShift.js"
 
