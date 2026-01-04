@@ -18,3 +18,4 @@ deepShift() {
     node "$deepshift_js" "$@"
 }
 
+alias dsh=deepShift
