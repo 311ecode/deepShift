@@ -1,16 +1,28 @@
 /**
  * deepShift.js
- * A single-file, dependency-free implementation of deepShift logic in Node.js.
- * Implements content replacement and file/directory renaming with .gitignore support.
- *
- * Usage:
- * node deepShift.js <old_string|path> <new_string> [--content-only|-c] [--files-only|-f] [--nogit|-n]
+ * Node 14+ compatible implementation.
+ * Architecture: Discovery -> Planning -> Execution
  */
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
+// Polyfill replaceAll for Node 14
+if (!String.prototype.replaceAll) {
+    String.prototype.replaceAll = function(str, newStr) {
+        if (Object.prototype.toString.call(str).toLowerCase() === '[object regexp]') {
+            return this.replace(str, newStr);
+        }
+        return this.replace(new RegExp(str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), newStr);
+    };
+}
+
 const EXCLUSION_DIRS = ['.git', 'node_modules'];
+const DEBUG = process.env.DEBUG === '1';
+
+function log(msg) {
+    if (DEBUG) console.error(`[DS_DEBUG] ${msg}`);
+}
 
 function replaceFileContent(filePath, oldString, newString) {
     try {
@@ -18,178 +30,198 @@ function replaceFileContent(filePath, oldString, newString) {
         if (content.includes(oldString)) {
             const newContent = content.replaceAll(oldString, newString);
             fs.writeFileSync(filePath, newContent, 'utf8');
+            log(`Content Updated: ${filePath}`);
             return true;
-        }
-    } catch (error) {}
-    return false;
-}
-
-function isIgnoredByHardcodedDirs(filePath) {
-    const segments = filePath.split(path.sep);
-    return segments.some(segment => EXCLUSION_DIRS.includes(segment));
-}
-
-function isIgnoredByGit(filePath, useGitignore = true) {
-    if (!useGitignore) return false;
-    try {
-        if (isIgnoredByHardcodedDirs(filePath)) return true;
-        if (fs.existsSync('.git')) {
-            try {
-                execSync(`git check-ignore -q "${filePath}"`, { stdio: 'pipe' });
-                return true;
-            } catch (e) {
-                return false;
-            }
+        } else {
+            // log(`Content Skip: ${oldString} not found in ${filePath}`);
         }
     } catch (error) {
-        return isIgnoredByHardcodedDirs(filePath);
+        log(`Content replace error on ${filePath}: ${error.message}`);
     }
     return false;
 }
 
-function deepShift(oldString, newString, options = {}) {
-    let { 
-        contentOnly = false, 
-        filesOnly = false, 
-        useGitignore = true,
-        rootDir = process.cwd(), 
-        cliMode = false 
-    } = options;
+function isIgnoredByGit(filePath, useGitignore = true) {
+    if (!useGitignore) return false;
+    const segments = filePath.split(path.sep);
+    if (segments.some(segment => EXCLUSION_DIRS.includes(segment))) return true;
+    try {
+        if (fs.existsSync('.git')) {
+            execSync(`git check-ignore -q "${filePath}"`, { stdio: 'pipe' });
+            return true;
+        }
+    } catch (e) { return false; }
+    return false;
+}
 
-    if (oldString === newString) {
-        if (cliMode) console.log("⚠️ Old and new strings are identical - no changes needed.");
+function deepShift(oldString, newString, options = {}) {
+    const { contentOnly, filesOnly, useGitignore, rootDir, cliMode, literalOld } = options;
+
+    log(`Start: old="${oldString}" new="${newString}" literal="${literalOld}"`);
+
+    // --- PHASE 0: VALIDATION ---
+    if (contentOnly && filesOnly) {
+        console.error("Error: Flags --content-only and --files-only are mutually exclusive");
+        return 1;
+    }
+
+    // Resolve literal path
+    let literalOldPath = null;
+    if (literalOld) {
+        const resolved = path.resolve(rootDir, literalOld);
+        if (fs.existsSync(resolved)) literalOldPath = resolved;
+    }
+
+    if (!literalOldPath && oldString === newString) {
+        if (cliMode) console.log("⚠️ Old and new strings are identical.");
         return 0;
     }
 
     let processedFileCount = 0;
     let processedDirCount = 0;
+    
+    const plannedMoves = new Map(); // oldPath -> newPath
 
-    if (cliMode) {
-        console.log(`🚀 deepShift starting: "${oldString}" -> "${newString}"`);
-        console.log(` Mode: ${contentOnly ? 'Content Only' : filesOnly ? 'Files Only' : 'Full'}`);
-        console.log(` Gitignore: ${useGitignore ? 'Enabled' : 'Disabled (--nogit)'}`);
+    // --- PHASE 1: PLANNING (Entity Mode) ---
+    if (literalOldPath && !contentOnly) {
+        const stats = fs.statSync(literalOldPath);
+        const parentDir = path.dirname(literalOldPath);
+        const originalName = path.basename(literalOldPath);
+        
+        let targetName = newString;
+        
+        // Strict Extension Logic
+        if (stats.isFile()) {
+            const ext = path.extname(originalName); 
+            const targetExt = path.extname(targetName);
+            if (ext && !targetExt) {
+                targetName += ext;
+            }
+        }
+
+        // CRITICAL FIX: Path Resolution Logic
+        let newPath;
+        if (targetName.includes(path.sep) || targetName.includes('/')) {
+            // If target has path separators (e.g. "src/security"), resolve relative to rootDir
+            // This prevents "src/src/security" duplication
+            newPath = path.resolve(rootDir, targetName);
+        } else {
+            // If simple name (e.g. "security"), resolve relative to current parent
+            newPath = path.join(parentDir, targetName);
+        }
+
+        if (literalOldPath !== newPath) {
+            plannedMoves.set(literalOldPath, newPath);
+        }
     }
 
-    const renamedPaths = new Map();
-
-    // --- Phase 1: Structural Renaming ---
+    // --- PHASE 2: PLANNING (Global Structure) ---
     if (!contentOnly) {
         const entities = [];
-        function collectEntities(currentPath) {
+        const scan = (dir) => {
             try {
-                const entries = fs.readdirSync(currentPath, { withFileTypes: true });
-                for (const entry of entries) {
-                    const fullPath = path.join(currentPath, entry.name);
-                    if (isIgnoredByGit(fullPath, useGitignore)) continue;
-                    if (entry.isDirectory()) {
-                        collectEntities(fullPath);
-                        entities.push({ path: fullPath, isDir: true });
-                    } else if (entry.isFile()) {
-                        entities.push({ path: fullPath, isDir: false });
+                const items = fs.readdirSync(dir, { withFileTypes: true });
+                for (const item of items) {
+                    const full = path.join(dir, item.name);
+                    if (isIgnoredByGit(full, useGitignore)) continue;
+                    
+                    if (plannedMoves.has(full)) continue;
+
+                    if (item.isDirectory()) {
+                        scan(full);
+                        entities.push({ path: full, isDir: true });
+                    } else {
+                        entities.push({ path: full, isDir: false });
                     }
                 }
             } catch (e) {}
+        };
+        scan(rootDir);
+
+        // --- ADAPTIVE SORTING STRATEGY ---
+        const isPathMode = oldString.includes('/') || oldString.includes('\\');
+        
+        if (isPathMode) {
+            entities.sort((a, b) => a.path.length - b.path.length); // Shallowest First
+        } else {
+            entities.sort((a, b) => b.path.length - a.path.length); // Deepest First
         }
-        collectEntities(rootDir);
-        entities.sort((a, b) => b.path.length - a.path.length);
 
         for (const entity of entities) {
-            let currentPath = entity.path;
-            const baseName = path.basename(currentPath);
-            const parentDir = path.dirname(currentPath);
-
-            if (renamedPaths.has(currentPath)) continue;
-
-            if (oldString.includes(path.sep)) {
-                if (currentPath.includes(oldString)) {
-                    const segmentCheck = (currentPath === oldString) ||
-                                         currentPath.endsWith(path.sep + oldString) ||
-                                         (entity.isDir && currentPath.endsWith(oldString));
-
-                    if (segmentCheck) {
-                        const newPath = currentPath.replaceAll(oldString, newString);
-                        if (newPath !== currentPath) {
-                            try {
-                                const newParentDir = path.dirname(newPath);
-                                if (!fs.existsSync(newParentDir)) {
-                                    fs.mkdirSync(newParentDir, { recursive: true });
-                                }
-                                fs.renameSync(currentPath, newPath);
-                                renamedPaths.set(currentPath, newPath);
-                                if (cliMode) console.log(`\n📂 Moved: ${currentPath.replace(rootDir + path.sep, '')} → ${newPath.replace(rootDir + path.sep, '')}`);
-                                entity.isDir ? processedDirCount++ : processedFileCount++;
-                            } catch (e) {
-                                if (cliMode) console.log(`Error moving ${currentPath}: ${e.message}`);
-                            }
-                        }
+            const curr = entity.path;
+            
+            // In Path Mode, skip children of moved directories
+            if (isPathMode) {
+                let isOrphan = false;
+                for (const [movedPath] of plannedMoves) {
+                    if (curr.startsWith(movedPath + path.sep)) {
+                        isOrphan = true;
+                        break;
                     }
+                }
+                if (isOrphan) continue;
+            }
+
+            let next = null;
+            if (isPathMode) {
+                // Use relative path for comparison to support path segment replacement from root
+                const relCurr = path.relative(rootDir, curr);
+                if (relCurr.includes(oldString)) {
+                    // Replace in the relative string, then join back
+                    const relNext = relCurr.replaceAll(oldString, newString);
+                    next = path.resolve(rootDir, relNext);
+                }
+            } else {
+                const base = path.basename(curr);
+                if (base.includes(oldString)) {
+                    const newBase = base.replaceAll(oldString, newString);
+                    next = path.join(path.dirname(curr), newBase);
                 }
             }
-            else if (baseName.includes(oldString)) {
-                let newBaseName;
-                if (!entity.isDir) {
-                    const ext = path.extname(baseName);
-                    const nameWithoutExt = baseName.slice(0, -ext.length || undefined);
-                    const newNameWithoutExt = nameWithoutExt.replaceAll(oldString, newString);
-                    newBaseName = ext ? `${newNameWithoutExt}${ext}` : newNameWithoutExt;
-                } else {
-                    newBaseName = baseName.replaceAll(oldString, newString);
-                }
 
-                if (newBaseName !== baseName) {
-                    const newPath = path.join(parentDir, newBaseName);
-                    try {
-                        fs.renameSync(currentPath, newPath);
-                        renamedPaths.set(currentPath, newPath);
-                        if (cliMode) console.log(`\n📄 Renamed: ${baseName} → ${newBaseName}`);
-                        entity.isDir ? processedDirCount++ : processedFileCount++;
-                    } catch (e) {
-                        if (cliMode) console.log(`Error renaming ${currentPath}: ${e.message}`);
-                    }
-                }
+            if (next && next !== curr) {
+                plannedMoves.set(curr, next);
             }
         }
     }
 
-    // --- Phase 2: Content Replacement ---
+    // --- PHASE 3: EXECUTION (Structural) ---
+    for (const [oldP, newP] of plannedMoves) {
+        try {
+            if (!fs.existsSync(oldP)) continue; 
+
+            const parent = path.dirname(newP);
+            if (!fs.existsSync(parent)) fs.mkdirSync(parent, { recursive: true });
+            
+            fs.renameSync(oldP, newP);
+            
+            if (cliMode) console.log(`📄 Renamed: ${path.relative(rootDir, oldP)} → ${path.relative(rootDir, newP)}`);
+            
+            if (fs.statSync(newP).isDirectory()) processedDirCount++;
+            else processedFileCount++;
+        } catch (e) {
+            log(`Move failed: ${e.message}`);
+        }
+    }
+
+    // --- PHASE 4: EXECUTION (Content) ---
     if (!filesOnly) {
-        const filesToProcess = [];
-        function findFiles(currentPath) {
+        const scanFiles = (dir) => {
             try {
-                const entries = fs.readdirSync(currentPath, { withFileTypes: true });
-                for (const entry of entries) {
-                    const fullPath = path.join(currentPath, entry.name);
-                    if (isIgnoredByGit(fullPath, useGitignore)) continue;
-                    if (entry.isDirectory()) {
-                        findFiles(fullPath);
-                    } else if (entry.isFile()) {
-                        try {
-                            const content = fs.readFileSync(fullPath, 'utf8');
-                            if (content.includes(oldString)) {
-                                filesToProcess.push(fullPath);
-                            }
-                        } catch (e) {}
+                const items = fs.readdirSync(dir, { withFileTypes: true });
+                for (const item of items) {
+                    const full = path.join(dir, item.name);
+                    if (isIgnoredByGit(full, useGitignore)) continue;
+                    
+                    if (item.isDirectory()) {
+                        scanFiles(full);
+                    } else if (item.isFile()) {
+                        if (replaceFileContent(full, oldString, newString)) processedFileCount++;
                     }
                 }
             } catch (e) {}
-        }
-        findFiles(rootDir);
-
-        if (cliMode) console.log(`\n🔍 Found ${filesToProcess.length} files with matching content...`);
-
-        filesToProcess.forEach(filePath => {
-            if (replaceFileContent(filePath, oldString, newString)) {
-                processedFileCount++;
-            }
-        });
-    }
-
-    if (cliMode) {
-        console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
-        console.log(`✅ deepShift Complete!`);
-        console.log(` Content Replacements: ${filesOnly ? 'Skipped' : processedFileCount}`);
-        console.log(` Structural Renames: ${contentOnly ? 'Skipped' : processedFileCount + processedDirCount}`);
-        console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+        };
+        scanFiles(rootDir);
     }
 
     return 0;
@@ -197,50 +229,42 @@ function deepShift(oldString, newString, options = {}) {
 
 function parseArgs() {
     const args = process.argv.slice(2);
-    
-    const hasContentOnly = args.includes('--content-only') || args.includes('-c');
-    const hasFilesOnly = args.includes('--files-only') || args.includes('-f');
-    
-    if (hasContentOnly && hasFilesOnly) {
-        throw new Error("Flags --content-only and --files-only are mutually exclusive");
-    }
-    
     const options = {
-        contentOnly: hasContentOnly,
-        filesOnly: hasFilesOnly,
+        contentOnly: args.includes('--content-only') || args.includes('-c'),
+        filesOnly: args.includes('--files-only') || args.includes('-f'),
         useGitignore: !(args.includes('--nogit') || args.includes('-n')),
         cliMode: true,
         rootDir: process.cwd()
     };
 
-    const positionalArgs = args.filter(arg => !arg.startsWith('-'));
+    const pos = args.filter(arg => !arg.startsWith('-'));
+    if (pos.length < 2) throw new Error("Usage: node deepShift.js <old> <new>");
 
-    if (positionalArgs.length < 2) {
-        throw new Error("Missing required arguments. Usage: node deepShift.js <old_string|path> <new_string> [--nogit|-n] [--content-only|-c] [--files-only|-f]");
+    let rawOld = pos[0];
+    let newString = pos[1];
+    let oldString = rawOld;
+
+    // Concept Discovery Logic
+    if (fs.existsSync(rawOld) && !newString.includes(path.sep)) {
+        const basename = path.basename(rawOld);
+        if (fs.statSync(rawOld).isFile()) {
+            const ext = path.extname(basename);
+            oldString = ext ? basename.slice(0, -ext.length) : basename;
+        } else {
+            oldString = basename;
+        }
     }
-
-    let oldString = positionalArgs[0];
-    let newString = positionalArgs[1];
-
-    if (fs.existsSync(oldString) && !newString.includes(path.sep)) {
-        const basename = path.basename(oldString);
-        oldString = fs.statSync(oldString).isFile()
-            ? basename.replace(path.extname(basename), '')
-            : basename;
-    }
-
+    
+    options.literalOld = rawOld;
     return { oldString, newString, options };
 }
 
 if (require.main === module && !process.argv.includes('--test')) {
     try {
         const { oldString, newString, options } = parseArgs();
-        const exitCode = deepShift(oldString, newString, options);
-        process.exit(exitCode);
+        process.exit(deepShift(oldString, newString, options));
     } catch (e) {
-        console.error(`\nFatal Error: ${e.message}`);
-        console.error("Example: node deepShift.js oldName newName");
-        console.error("Example: node deepShift.js oldName newName --nogit");
+        console.error(e.message);
         process.exit(1);
     }
 }

@@ -2,9 +2,19 @@
 
 # @file dirShift.sh
 # @brief Specialized utility for directory-only structural refactoring
-# @description Finds directories matching a pattern, renames them, and updates references.
 
 dirShift() {
+  local debug_mode=0
+  if [[ "$DEBUG" == "1" ]]; then debug_mode=1; fi
+  
+  log_debug() {
+    if [[ "$debug_mode" -eq 1 ]]; then
+      echo "[DIRSHIFT_DEBUG] $*" >&2
+    fi
+  }
+
+  log_debug "Starting dirShift with args: $*"
+
   # 1. Parse Arguments
   local args=()
   local skip_git=false
@@ -50,11 +60,26 @@ dirShift() {
     return 1
   fi
 
+  log_debug "Parsed: target='$target_dir' old='$old_string' new='$new_string'"
+
   # 2. Strategy Selection
-  # If explicit path exists, treat as specific move
-  if [[ -d "$target_dir/$old_string" ]] || [[ -d "$old_string" ]]; then
+  local explicit_path_relative="$target_dir/$old_string"
+  
+  # Check existence. Note: -d checks if it exists.
+  if [[ -d "$explicit_path_relative" ]] || [[ -d "$old_string" ]]; then
       echo "📂 Mode: Explicit Directory Move"
-      deepShift "$old_string" "$new_string" "${replace_flags[@]}"
+      log_debug "Delegating to deepShift..."
+      
+      # FIX: Pass the cleanest possible string to deepShift to ensure content matching works.
+      # If target_dir is "." (default), pass old_string directly (e.g. "src/auth")
+      # instead of "./src/auth".
+      
+      if [[ "$target_dir" == "." ]]; then
+         deepShift "$old_string" "$new_string" "${replace_flags[@]}"
+      else
+         deepShift "$target_dir/$old_string" "$new_string" "${replace_flags[@]}"
+      fi
+      
       return $?
   fi
 
@@ -64,6 +89,7 @@ dirShift() {
     
     echo "📂 Working in: $(pwd)"
     echo "🔍 Scanning for DIRECTORIES matching pattern: *${old_string}*"
+    log_debug "Scanning in $(pwd)"
     
     local find_opts=( )
     if [[ "$skip_git" != "true" ]]; then
@@ -85,6 +111,8 @@ dirShift() {
     local dirs_found=${#matching_dirs[@]}
     local dirs_processed=0
 
+    log_debug "Found $dirs_found directories matching pattern"
+
     if [[ $dirs_found -eq 0 ]]; then
       echo "⚠️  No directories found matching pattern: *${old_string}*"
       return 1
@@ -93,7 +121,6 @@ dirShift() {
     echo "   Found $dirs_found directories."
     
     # Sort directories by depth (deepest first)
-    # FIX: Use temp variable 'p' in awk to preserve $0 path
     local sorted_dirs=()
     while IFS= read -r dir; do
       sorted_dirs+=("$dir")
@@ -118,6 +145,7 @@ dirShift() {
         
         echo "📁 Directory: $dir"
         echo "   → Renaming to: $new_dirname"
+        log_debug "mv $dir -> $new_dir_path"
         
         if mv "$dir" "$new_dir_path" 2>/dev/null; then
           ((dirs_processed++))
@@ -129,10 +157,9 @@ dirShift() {
     done
     
     # 5. Global Content Update
-    # Now that directories are moved, we MUST update references (imports, etc.)
     if [[ $dirs_processed -gt 0 ]]; then
         echo "🔄 Updating content references..."
-        # Call deepShift in content-only mode (-c) to update strings matching the rename
+        log_debug "Calling deepShift content-only update"
         deepShift "$old_string" "$new_string" "${replace_flags[@]}" -c
         echo "✅ References updated"
         echo ""

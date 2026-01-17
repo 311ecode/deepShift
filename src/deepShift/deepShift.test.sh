@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
 deepShift.test() {
+    # Enable debug output for the test run if desired
+    # export DEBUG=1 
+    
     command -v markdown-show-help-registration &>/dev/null && eval "$(markdown-show-help-registration)"
     
     local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
