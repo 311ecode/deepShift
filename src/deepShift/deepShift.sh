@@ -1,12 +1,22 @@
 #!/usr/bin/env bash
 
+# deepShift wrapper: Works in Bash and Zsh
 deepShift() {
-    command -v markdown-show-help-registration &>/dev/null && eval "$(markdown-show-help-registration --minimum-parameters 2)"
-    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    local deepshift_js="${script_dir}/deepShift.js"
+    # 🔍 1. Identify the script location (Bash/Zsh compatible)
+    local current_script="${BASH_SOURCE[0]:-${(%):-%x}}"
+    local script_dir="$(cd "$(dirname "$current_script")" && pwd)"
 
-    if [[ ! -f "$deepshift_js" ]]; then
-        echo "Error: deepShift.js not found at $deepshift_js" >&2
+    # 🚀 2. Identify the JS Engine
+    # Prioritize the global ROOT_DIR if set by the loader, fallback to local dir
+    local engine_path="${DEEPSHIFT_ROOT_DIR:-$script_dir}/src/deepShift/deepShift.js"
+    
+    # Fallback check if the above structure is flattened
+    if [[ ! -f "$engine_path" ]]; then
+        engine_path="${script_dir}/deepShift.js"
+    fi
+
+    if [[ ! -f "$engine_path" ]]; then
+        echo "Error: deepShift.js not found at $engine_path" >&2
         return 1
     fi
 
@@ -15,7 +25,7 @@ deepShift() {
         return 1
     fi
 
-    node "$deepshift_js" "$@"
+    node "$engine_path" "$@"
 }
 
 alias dsh=deepShift
